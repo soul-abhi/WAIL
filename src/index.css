@@ -8,7 +8,7 @@ body {
 }
 
 a {
-  @apply font-medium text-indigo-400 hover: text-indigo-300;
+  @apply font-medium text-indigo-400 hover:text-indigo-300;
 }
 
 button:focus-visible {
