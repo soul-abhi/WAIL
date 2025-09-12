@@ -1,7 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+@import "tailwindcss";
 /* Custom global styles (keep minimal; rely on Tailwind utilities) */
 body {
   @apply bg-neutral-900 text-neutral-100 antialiased;
