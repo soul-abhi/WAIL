@@ -1,9 +1,9 @@
-// src/components/NavBar.tsx
+import { Link } from "react-router-dom"
+
 function NavBar() {
   return (
     <nav className="flex items-center justify-between px-8 py-4 shadow-md bg-neutral-900 text-white">
-      
-      <div className="text-2xl font-bold text-indigo-400">DSA VisualiZor</div>
+      <Link to="/" className="text-2xl font-bold text-indigo-400">DSA VisualiZor</Link>
 
       {/* Navigation Links */}
       <div className="hidden md:flex gap-8 text-sm font-medium">
@@ -13,9 +13,12 @@ function NavBar() {
       </div>
 
       {/* Get Started Button */}
-      <button className="rounded-md bg-indigo-600 px-5 py-2 text-sm font-semibold hover:bg-indigo-500 transition-colors">
+      <Link
+        to="/visualizer"
+        className="rounded-md bg-indigo-600 px-5 py-2 text-sm font-semibold hover:bg-indigo-500 transition-colors"
+      >
         Get Started
-      </button>
+      </Link>
     </nav>
   )
 }
