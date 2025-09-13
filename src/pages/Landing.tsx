@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
+import Button from "../components/Button";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -83,15 +84,13 @@ export default function Landing() {
           transition={{ duration: 1, delay: 0.3 }}
           className="text-6xl md:text-8xl font-black text-center leading-tight animate-fade-in-delay"
           style={{
-            background: `linear-gradient(45deg, 
-              #00f5d4 0%, 
-              #ff00ff 50%, 
-              #8a2be2 100%)`,
+            background: `linear-gradient(45deg,#053345 0%,white 50% , #053345 100%)`,
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
-            filter: "drop-shadow(0 0 20px rgba(0, 245, 212, 0.5))"
+             filter: "drop-shadow(0px 0px 30px #053345)"
           }}
+           
         >
           ALGORITHM
           <br />
@@ -109,40 +108,23 @@ export default function Landing() {
         </motion.p>
 
         {/* Enter Arena button */}
-        <motion.button
+        <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.9 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate("/visualizer")}
-          className="mt-8 px-12 py-4 text-xl font-bold tracking-wider rounded-full relative overflow-hidden group"
-          style={{
-            background: `linear-gradient(45deg, 
-              #00f5d4 0%, 
-              #ff00ff 50%, 
-              #8a2be2 100%)`,
-            backgroundSize: "200% 200%",
-          }}
+          className="mt-8"
         >
-          <span className="relative z-10 text-black font-black">ENTER ARENA</span>
-          <div 
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              background: `linear-gradient(45deg, 
-                rgba(0, 245, 212, 0.8) 0%, 
-                rgba(255, 0, 255, 0.8) 50%, 
-                rgba(138, 43, 226, 0.8) 100%)`,
-              filter: "blur(10px)",
-              transform: "scale(1.2)"
-            }}
-          />
-        </motion.button>
+          <Button onClick={() => navigate("/visualizer")}>
+            ENTER ARENA
+          </Button>
+        </motion.div>
 
         {/* Additional glow effects */}
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-cyan-400 rounded-full opacity-20 blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-500 rounded-full opacity-15 blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-3/4 left-1/3 w-24 h-24 bg-pink-500 rounded-full opacity-25 blur-2xl animate-pulse delay-500" />
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-cyan-950 rounded-full opacity-20 blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-cyan-950 rounded-full opacity-15 blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-3/4 left-1/3 w-24 h-24 bg-cyan-950 rounded-full opacity-25 blur-2xl animate-pulse delay-500" />
       </div>
     </div>
   );
