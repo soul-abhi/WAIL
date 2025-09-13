@@ -1,69 +1,106 @@
-# React + TypeScript + Vite
+# WAIL - Algorithm Visualizer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**WAIL (What Algorithms I've Learned)** is a futuristic cyberpunk-themed algorithm visualization platform built with React, TypeScript, and modern web technologies.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Cyberpunk Landing Page**: Animated dot matrix background with cursor-following neon effects
+- **Interactive Button Components**: Professional UI inspection with anatomy overlays on hover
+- **Gradient Text Effects**: Dynamic text styling with drop shadows and animations
+- **Smooth Animations**: Powered by Framer Motion for fluid user interactions
+- **Modern Stack**: Built with React 19, TypeScript, and Vite for optimal performance
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend**: React 19 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS v4 + Styled Components
+- **Animations**: Framer Motion
+- **Routing**: React Router
+- **Package Manager**: npm
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 📦 Installation
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+1. Clone the repository:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/soul-abhi/WAIL.git
+cd WAIL
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Install dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+3. Start the development server:
+
+```bash
+npm run dev
+```
+
+4. Open your browser and navigate to `http://localhost:5173`
+
+## 🎨 Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── Button.tsx      # Styled button with anatomy inspection
+│   └── NavBar.tsx      # Navigation component
+├── pages/              # Page components
+│   ├── Landing.tsx     # Cyberpunk landing page
+│   └── Visualizer.tsx  # Algorithm visualization page
+├── assets/             # Static assets
+└── App.tsx            # Root component
+```
+
+## 🎯 Features in Detail
+
+### Landing Page
+
+- **Animated Background**: SVG-based dot matrix with cursor-following cyan glow effects
+- **Gradient Text**: "ALGORITHM UNLOCKED" with dynamic styling and shadows
+- **Interactive Button**: Professional UI inspection tool showing padding, borders, and background anatomy
+
+### Button Component
+
+- **Styled Components**: Custom button with gradient blue background
+- **Anatomy Inspection**: Hover to reveal professional developer tool-style annotations
+- **Clean Layout**: Icon on left, centered text, no overlapping elements
+
+## 🚀 Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## 🎨 Styling
+
+The project uses Tailwind CSS v4 with custom animations and PostCSS configuration. Key styling features:
+
+- Custom keyframe animations for glow effects
+- Gradient animations and text effects
+- Professional hover states and transitions
+- Responsive design patterns
+
+## 🔧 Configuration
+
+- **Vite**: Modern build tool with hot reload
+- **TypeScript**: Strict type checking enabled
+- **Tailwind**: Custom configuration with animations
+- **ESLint**: Code quality and consistency
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/soul-abhi/WAIL/issues).
+
+---
+
+**Built with ❤️ using modern web technologies**
