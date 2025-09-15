@@ -28,7 +28,7 @@ export default function Landing() {
   return (
     <div 
       ref={containerRef}
-      className="relative min-h-screen bg-black text-white flex flex-col items-center justify-center overflow-hidden"
+      className="relative min-h-screen bg-gray-100 dark:bg-black text-gray-900 dark:text-white flex flex-col items-center justify-center overflow-hidden"
     >
       {/* SVG-based dotted background */}
       <div 
