@@ -3,6 +3,7 @@ import { Editor } from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import NavBar from '../components/NavBar';
+import { AIAnalyzer, type AIAnalysisResult, type AlgorithmStep } from '../services/ai/aiAnalyzer';
 
 // Types for algorithm visualization
 interface ArrayElement {
@@ -11,20 +12,8 @@ interface ArrayElement {
   status: 'idle' | 'current' | 'found' | 'checked';
 }
 
-interface AlgorithmStep {
-  type: 'compare' | 'found' | 'not_found' | 'move';
-  currentIndex: number;
-  targetValue?: number;
-  description: string;
-  highlightLine?: number;
-}
-
-interface ParsedAlgorithm {
-  array: number[];
-  target?: number;
-  algorithmType: 'linear_search' | 'binary_search' | 'unknown';
-  steps: AlgorithmStep[];
-}
+// Using AIAnalysisResult instead of ParsedAlgorithm for consistency
+type ParsedAlgorithm = AIAnalysisResult;
 
 export default function Visualizer() {
   // State management
@@ -36,6 +25,8 @@ export default function Visualizer() {
   const [animationSpeed, setAnimationSpeed] = useState<number>(1000);
   const [pointer, setPointer] = useState<number>(-1);
   const [message, setMessage] = useState<string>('');
+  const [showOutput, setShowOutput] = useState<boolean>(false);
+  const [outputText, setOutputText] = useState<string>('');
 
   // const editorRef = useRef<any>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -63,95 +54,17 @@ const result = linearSearch(numbers, target);`;
     setCode(sampleCode);
   }, []);
 
-  // Code parsing function
-  const parseCode = useCallback((inputCode: string): ParsedAlgorithm | null => {
-    try {
-      // Extract array from code
-      const arrayMatch = inputCode.match(/(?:const|let|var)\s+\w+\s*=\s*\[([^\]]+)\]/) ||
-                        inputCode.match(/\[([^\]]+)\]/);
-      
-      if (!arrayMatch) {
-        throw new Error('No array found in code');
-      }
-
-      const arrayValues = arrayMatch[1]
-        .split(',')
-        .map(val => parseInt(val.trim()))
-        .filter(val => !isNaN(val));
-
-      // Extract target value
-      const targetMatch = inputCode.match(/(?:const|let|var)\s+target\s*=\s*(\d+)/) ||
-                         inputCode.match(/target\s*=\s*(\d+)/);
-      
-      const target = targetMatch ? parseInt(targetMatch[1]) : undefined;
-
-      // Determine algorithm type
-      let algorithmType: 'linear_search' | 'binary_search' | 'unknown' = 'unknown';
-      if (inputCode.includes('for') && inputCode.includes('i++')) {
-        algorithmType = 'linear_search';
-      } else if (inputCode.includes('while') && inputCode.includes('mid')) {
-        algorithmType = 'binary_search';
-      } else {
-        algorithmType = 'linear_search'; // Default fallback
-      }
-
-      // Generate steps for linear search
-      const steps: AlgorithmStep[] = [];
-      
-      if (algorithmType === 'linear_search' && target !== undefined) {
-        for (let i = 0; i < arrayValues.length; i++) {
-          steps.push({
-            type: 'compare',
-            currentIndex: i,
-            targetValue: target,
-            description: `Comparing arr[${i}] (${arrayValues[i]}) with target (${target})`,
-            highlightLine: 2
-          });
-
-          if (arrayValues[i] === target) {
-            steps.push({
-              type: 'found',
-              currentIndex: i,
-              targetValue: target,
-              description: `Found target ${target} at index ${i}!`,
-              highlightLine: 3
-            });
-            break;
-          }
-        }
-
-        // Add not found step if target wasn't found
-        if (!steps.some(step => step.type === 'found')) {
-          steps.push({
-            type: 'not_found',
-            currentIndex: arrayValues.length,
-            targetValue: target,
-            description: `Target ${target} not found in array`,
-            highlightLine: 6
-          });
-        }
-      }
-
-      return {
-        array: arrayValues,
-        target,
-        algorithmType,
-        steps
-      };
-    } catch (error) {
-      console.error('Failed to parse code:', error);
-      return null;
-    }
-  }, []);
-
-  // Convert code to visualization data
+  // Convert code to visualization data using AI
   const handleConvert = useCallback(() => {
-    const parsed = parseCode(code);
-    if (parsed) {
-      setParsedData(parsed);
+    setMessage('🤖 AI analyzing your code...');
+    
+    // Use AI analyzer instead of basic parsing
+    const analyzed = AIAnalyzer.analyzeCode(code);
+    if (analyzed) {
+      setParsedData(analyzed);
       
       // Create array elements
-      const newElements: ArrayElement[] = parsed.array.map((value, index) => ({
+      const newElements: ArrayElement[] = analyzed.array.map((value, index) => ({
         value,
         index,
         status: 'idle'
@@ -160,11 +73,15 @@ const result = linearSearch(numbers, target);`;
       setElements(newElements);
       setCurrentStep(-1);
       setPointer(-1);
-      setMessage(`Array loaded: [${parsed.array.join(', ')}]${parsed.target ? ` | Target: ${parsed.target}` : ''}`);
+      
+      // Enhanced message with AI insights
+      const algorithmName = analyzed.algorithmType.replace('_', ' ').toUpperCase();
+      const complexityInfo = analyzed.complexity ? ` | Time: ${analyzed.complexity.time}, Space: ${analyzed.complexity.space}` : '';
+      setMessage(`✅ AI Analysis Complete: ${algorithmName} detected | Array: [${analyzed.array.join(', ')}]${analyzed.target ? ` | Target: ${analyzed.target}` : ''}${complexityInfo}`);
     } else {
-      setMessage('Failed to parse code. Please check your array syntax.');
+      setMessage('❌ AI analysis failed. Please check your code syntax and ensure it contains a valid algorithm.');
     }
-  }, [code, parseCode]);
+  }, [code]);
 
   // Run algorithm visualization
   const handleRun = useCallback(() => {
@@ -186,16 +103,41 @@ const result = linearSearch(numbers, target);`;
       setPointer(step.currentIndex);
       setMessage(step.description);
 
-      // Update element statuses
-      setElements(prev => prev.map((el, idx) => {
-        if (idx === step.currentIndex) {
-          return { ...el, status: step.type === 'found' ? 'found' : 'current' };
-        } else if (idx < step.currentIndex) {
-          return { ...el, status: 'checked' };
-        } else {
-          return { ...el, status: 'idle' };
+      // Update element statuses with enhanced AI step handling
+      setElements(prev => {
+        let newElements = [...prev];
+        
+        // Handle swapping for sorting algorithms
+        if (step.type === 'swap' && step.secondaryIndex !== undefined) {
+          // Physically swap the elements in the array
+          const temp = newElements[step.currentIndex];
+          newElements[step.currentIndex] = newElements[step.secondaryIndex];
+          newElements[step.secondaryIndex] = temp;
+          
+          // Update their indices
+          newElements[step.currentIndex].index = step.currentIndex;
+          newElements[step.secondaryIndex].index = step.secondaryIndex;
         }
-      }));
+        
+        // Apply visual status updates
+        return newElements.map((el, idx) => {
+          if (idx === step.currentIndex) {
+            return { 
+              ...el, 
+              status: step.type === 'found' ? 'found' : 'current' 
+            };
+          } else if (step.secondaryIndex !== undefined && idx === step.secondaryIndex) {
+            return { 
+              ...el, 
+              status: step.type === 'swap' ? 'current' : 'current' 
+            };
+          } else if (step.type === 'compare' && idx < step.currentIndex) {
+            return { ...el, status: 'checked' };
+          } else {
+            return { ...el, status: 'idle' };
+          }
+        });
+      });
 
       timeoutRef.current = setTimeout(() => runStep(stepIndex + 1), animationSpeed);
     };
@@ -283,6 +225,19 @@ const result = linearSearch(numbers, target);`;
               >
                 {isRunning ? 'Stop' : 'Run'}
               </button>
+              <button 
+                onClick={() => {
+                  if (parsedData?.output) {
+                    setOutputText(parsedData.output);
+                    setShowOutput(true);
+                  } else {
+                    setOutputText('No output available. Please convert code first.');
+                    setShowOutput(true);
+                  }
+                }}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-200">
+                Opt
+              </button>
             </div>
           </div>
           <div className="flex-1">
@@ -305,6 +260,24 @@ const result = linearSearch(numbers, target);`;
               }}
             />
           </div>
+
+          {/* Output Display Panel */}
+          {showOutput && (
+            <div className="bg-gray-800 p-4 border-t border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-white">Code Output</h3>
+                <button 
+                  onClick={() => setShowOutput(false)}
+                  className="text-gray-400 hover:text-white text-sm transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="bg-black p-3 rounded text-green-400 font-mono text-sm overflow-x-auto max-h-32 overflow-y-auto">
+                {outputText}
+              </div>
+            </div>
+          )}
 
           {/* Speed Control */}
           <div className="bg-gray-800 p-4 border-t border-gray-700">
@@ -349,10 +322,22 @@ const result = linearSearch(numbers, target);`;
                 {/* Array Title */}
                 <div className="mb-6 sm:mb-8 text-center">
                   <h3 className="text-lg sm:text-xl font-bold text-cyan-400 mb-1 sm:mb-2">
-                    {parsedData?.algorithmType === 'linear_search' ? 'Linear Search' : 'Algorithm'} Visualization
+                    {parsedData?.algorithmType === 'linear_search' ? 'Linear Search' :
+                     parsedData?.algorithmType === 'binary_search' ? 'Binary Search' :
+                     parsedData?.algorithmType === 'bubble_sort' ? 'Bubble Sort' :
+                     parsedData?.algorithmType === 'selection_sort' ? 'Selection Sort' :
+                     parsedData?.algorithmType === 'insertion_sort' ? 'Insertion Sort' :
+                     'Algorithm'} Visualization
                   </h3>
                   <p className="text-sm sm:text-base text-gray-400">
-                    {parsedData?.target ? `Searching for: ${parsedData.target}` : 'Algorithm in progress'}
+                    {parsedData?.target ? `Searching for: ${parsedData.target}` : 
+                     parsedData?.algorithmType?.includes('sort') ? 'Sorting array elements' : 
+                     'Algorithm in progress'}
+                    {parsedData?.complexity && (
+                      <span className="ml-2 text-xs text-purple-400">
+                        | Time: {parsedData.complexity.time} | Space: {parsedData.complexity.space}
+                      </span>
+                    )}
                   </p>
                 </div>
 
