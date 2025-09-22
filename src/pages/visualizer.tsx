@@ -3,7 +3,7 @@ import { Editor } from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import NavBar from '../components/NavBar';
-import { AIAnalyzer, type AIAnalysisResult, type AlgorithmStep } from '../services/ai/aiAnalyzer';
+import { AIAnalyzer, type AIAnalysisResult } from '../services/ai/aiAnalyzer';
 
 // Types for algorithm visualization
 interface ArrayElement {
