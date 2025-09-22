@@ -37,8 +37,11 @@ export default function Visualizer() {
   const [pointer, setPointer] = useState<number>(-1);
   const [message, setMessage] = useState<string>('');
 
-  const editorRef = useRef<any>(null);
+  // const editorRef = useRef<any>(null);
   const timeoutRef = useRef<number | null>(null);
+  const vizContainerRef = useRef<HTMLDivElement | null>(null);
+  const elementRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const [pointerPos, setPointerPos] = useState<{ x: number; y: number } | null>(null);
 
   // Sample code for demonstration
   const sampleCode = `function linearSearch(arr, target) {
@@ -214,12 +217,52 @@ const result = linearSearch(numbers, target);`;
     setMessage('Algorithm stopped');
   }, []);
 
+  // Recalculate pointer position whenever the pointer index or elements change
+  useEffect(() => {
+    if (pointer < 0 || !vizContainerRef.current) {
+      setPointerPos(null);
+      return;
+    }
+    const el = elementRefs.current[pointer];
+    const container = vizContainerRef.current;
+    if (!el) {
+      setPointerPos(null);
+      return;
+    }
+    const elRect = el.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    setPointerPos({
+      x: elRect.left - containerRect.left + elRect.width / 2,
+      y: elRect.top - containerRect.top,
+    });
+  }, [pointer, elements, parsedData]);
+
+  // Recompute pointer on window resize
+  useEffect(() => {
+    const onResize = () => {
+      if (pointer >= 0) {
+        const el = elementRefs.current[pointer];
+        const container = vizContainerRef.current;
+        if (el && container) {
+          const elRect = el.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          setPointerPos({
+            x: elRect.left - containerRect.left + elRect.width / 2,
+            y: elRect.top - containerRect.top,
+          });
+        }
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [pointer]);
+
   return (
     <div className="min-h-screen bg-gray-900">
       <NavBar />
-      <div className="flex h-screen bg-gray-900 text-white">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-64px)] bg-gray-900 text-white">
         {/* Left Panel - Code Editor */}
-        <div className="w-1/2 flex flex-col border-r border-gray-700">
+        <div className="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-700">
           <div className="bg-gray-800 p-4 border-b border-gray-700">
             <h2 className="text-lg font-semibold text-white mb-2">Algorithm Code Editor</h2>
             <div className="flex gap-3">
@@ -281,117 +324,105 @@ const result = linearSearch(numbers, target);`;
         </div>
 
         {/* Right Panel - Visualization */}
-        <div className="w-1/2 flex flex-col bg-gray-900">
-          <div className="bg-gray-800 p-4 border-b border-gray-700">
-            <h2 className="text-lg font-semibold text-white mb-2">Algorithm Visualization</h2>
-            <div className="text-sm text-gray-300">
+        <div className="w-full lg:w-1/2 flex flex-col bg-gray-900">
+          <div className="bg-gray-800 px-4 py-3 sm:p-4 border-b border-gray-700">
+            <h2 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Algorithm Visualization</h2>
+            <div className="text-xs sm:text-sm text-gray-300">
               {message || 'Load code and click Convert to start'}
             </div>
           </div>
-          <div className="flex-1 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+          <div ref={vizContainerRef} className="flex-1 p-6 sm:p-8 flex flex-col items-center justify-center relative overflow-hidden">
             {/* Background Grid */}
-            <div className="absolute inset-0 opacity-5">
-              <div className="grid grid-cols-10 grid-rows-10 h-full w-full">
-                {Array.from({ length: 100 }).map((_, i) => (
-                  <div key={i} className="border border-cyan-400/20"></div>
-                ))}
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute inset-0 opacity-10">
+                <div className="grid grid-cols-12 grid-rows-12 h-full w-full">
+                  {Array.from({ length: 144 }).map((_, i) => (
+                    <div key={i} className="border border-white/10"></div>
+                  ))}
+                </div>
               </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5" />
             </div>
 
             {elements.length > 0 ? (
               <>
                 {/* Array Title */}
-                <div className="mb-8 text-center">
-                  <h3 className="text-xl font-bold text-cyan-400 mb-2">
+                <div className="mb-6 sm:mb-8 text-center">
+                  <h3 className="text-lg sm:text-xl font-bold text-cyan-400 mb-1 sm:mb-2">
                     {parsedData?.algorithmType === 'linear_search' ? 'Linear Search' : 'Algorithm'} Visualization
                   </h3>
-                  <p className="text-gray-400">
+                  <p className="text-sm sm:text-base text-gray-400">
                     {parsedData?.target ? `Searching for: ${parsedData.target}` : 'Algorithm in progress'}
                   </p>
                 </div>
 
-                {/* Pointer Arrow */}
+                {/* Pointer Arrow (dynamically positioned) */}
                 <AnimatePresence>
-                  {pointer >= 0 && (
+                  {pointer >= 0 && pointerPos && (
                     <motion.div
                       key={`pointer-${pointer}`}
-                      className="absolute"
-                      style={{
-                        left: `calc(50% + ${(pointer - (elements.length - 1) / 2) * 100}px - 12px)`,
-                        top: '45%'
-                      }}
-                      initial={{ opacity: 0, y: -20 }}
+                      className="absolute z-20 -translate-x-1/2"
+                      style={{ left: pointerPos.x, top: Math.max(8, pointerPos.y - 28) }}
+                      initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <div className="text-yellow-400 text-2xl">↓</div>
-                      <div className="text-xs text-yellow-400 font-bold mt-1">i = {pointer}</div>
+                      <div className="text-yellow-400 text-2xl leading-none">↓</div>
+                      <div className="text-[10px] text-yellow-400 font-bold mt-1 text-center">i = {pointer}</div>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Array Elements */}
-                <div className="flex items-center gap-4 mb-8">
-                  <AnimatePresence mode="popLayout">
-                    {elements.map((element) => (
-                      <motion.div
-                        key={`element-${element.index}`}
-                        className={clsx(
-                          "relative w-20 h-20 rounded-xl border-2 flex items-center justify-center text-xl font-bold text-white cursor-pointer",
-                          element.status === 'idle' && "border-gray-500 bg-gray-600",
-                          element.status === 'current' && "border-yellow-400 bg-yellow-500 shadow-lg shadow-yellow-400/50",
-                          element.status === 'found' && "border-green-400 bg-green-500 shadow-lg shadow-green-400/50",
-                          element.status === 'checked' && "border-red-400 bg-red-500"
-                        )}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ 
-                          scale: element.status === 'current' ? 1.1 : element.status === 'found' ? 1.15 : 1,
-                          opacity: 1
-                        }}
-                        transition={{
-                          duration: 0.4,
-                          type: "spring",
-                          stiffness: 200,
-                          damping: 20
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <span className="relative z-10">{element.value}</span>
-                        
-                        {/* Target indicator */}
-                        {parsedData?.target === element.value && (
+                {/* Array Elements (responsive grid with indices) */}
+                <div className="w-full max-w-5xl mb-4">
+                  <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+                    <AnimatePresence mode="popLayout">
+                      {elements.map((element) => (
+                        <div key={`wrap-${element.index}`} className="flex flex-col items-center">
                           <motion.div
-                            className="absolute -top-2 -right-2 w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center text-xs font-bold text-black"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.2 }}
+                            ref={(el) => { elementRefs.current[element.index] = el; }}
+                            key={`element-${element.index}`}
+                            className={clsx(
+                              "relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 flex items-center justify-center text-lg sm:text-xl font-bold text-white cursor-pointer",
+                              element.status === 'idle' && "border-gray-500/80 bg-gray-700",
+                              element.status === 'current' && "border-yellow-400 bg-yellow-500 shadow-lg shadow-yellow-400/20",
+                              element.status === 'found' && "border-green-400 bg-green-500 shadow-lg shadow-green-400/20",
+                              element.status === 'checked' && "border-red-400 bg-red-500/90"
+                            )}
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ 
+                              scale: element.status === 'current' ? 1.06 : element.status === 'found' ? 1.1 : 1,
+                              opacity: 1
+                            }}
+                            transition={{ duration: 0.25 }}
+                            whileHover={{ scale: 1.04 }}
                           >
-                            🎯
+                            <span className="relative z-10 select-none">{element.value}</span>
+                            {parsedData?.target === element.value && (
+                              <motion.div
+                                className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-cyan-400 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold text-black"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.1 }}
+                              >
+                                🎯
+                              </motion.div>
+                            )}
                           </motion.div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-
-                {/* Array Indices */}
-                <div className="flex items-center gap-4">
-                  {elements.map((element) => (
-                    <motion.div
-                      key={`index-${element.index}`}
-                      className={clsx(
-                        "w-20 text-center text-sm font-mono transition-all duration-300",
-                        element.status === 'current' ? "text-yellow-400 font-bold" :
-                        element.status === 'found' ? "text-green-400 font-bold" :
-                        element.status === 'checked' ? "text-red-400" :
-                        "text-gray-500"
-                      )}
-                      layout
-                    >
-                      [{element.index}]
-                    </motion.div>
-                  ))}
+                          <div className={clsx(
+                            "mt-1 text-[10px] sm:text-xs font-mono",
+                            element.status === 'current' ? "text-yellow-400 font-semibold" :
+                            element.status === 'found' ? "text-green-400 font-semibold" :
+                            element.status === 'checked' ? "text-red-400" :
+                            "text-gray-400"
+                          )}>
+                            [{element.index}]
+                          </div>
+                        </div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 {/* Algorithm Status */}

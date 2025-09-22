@@ -74,9 +74,9 @@ export default function Landing() {
           transition={{ duration: 0.8 }}
           className="text-sm font-mono tracking-widest text-cyan-400 mb-4 animate-fade-in"
         >
-          ⚡ NEON VISUALIZER
+          ⚡VISUALIZER
         </motion.div>
-
+        {/* You can not understand this */}
         {/* Main heading */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
